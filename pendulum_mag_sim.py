@@ -53,9 +53,9 @@ class Pendulum():
         ax.set_xlim(-2, 2)
         ax.set_ylim(-2, 2)
         ax.invert_yaxis()
-
-        for magnet in self.magnets:
-            ax.scatter([magnet.position[1]], [magnet.position[0]])
+        
+        for i, magnet in enumerate(self.magnets):
+            ax.scatter([magnet.position[1]], [magnet.position[0]], label=f"Magnet {i}")
             ax.quiver(magnet.position[1], magnet.position[0], magnet.moment[1], magnet.moment[0], angles='xy', scale_units='xy', scale=1)
 
         def init():
@@ -70,6 +70,7 @@ class Pendulum():
         plt.grid()
         plt.xlabel("y")
         plt.ylabel("x")
+        plt.legend()
         ani = FuncAnimation(fig, update, frames=len(ts), init_func=init, blit=True, interval=10)
         ax.set_aspect('equal')
         plt.show()
@@ -86,7 +87,22 @@ class Pendulum():
 
         return f
 
-sim = Pendulum(M_p=1,m_p=0.5,l=1,mu_0=1,g=1,alpha=0.1)
-sim.add_magnet(Magnet(np.array([1.5,1]), np.array([0.1,0])))
-sim.add_magnet(Magnet(np.array([1.5,-1]), np.array([-0.1,0])))
-sim.simulate((0,50), (0,-1))
+# Sim 1: Pendulum should end in the left hand side of the plot
+sim = Pendulum(M_p=1,m_p=1,l=1,mu_0=1,g=1,alpha=0.1)
+sim.add_magnet(Magnet(np.array([1.5,1]), np.array([0.5,0])))
+sim.add_magnet(Magnet(np.array([1.5,-1]), np.array([0.5,0])))
+
+sim.simulate((0,50), (-0.1,0))
+
+# Sim 2: Pendulum should end in the right hand side of the plot
+sim = Pendulum(M_p=1,m_p=1,l=1,mu_0=1,g=1,alpha=0.1)
+sim.add_magnet(Magnet(np.array([1.5,1]), np.array([0.5,0])))
+sim.add_magnet(Magnet(np.array([1.5,-1]), np.array([0.5,0])))
+
+sim.simulate((0,50), (0.1,0))
+
+# Sim 3: Pendulum should be pushed a little to the left
+sim = Pendulum(M_p=1,m_p=0.1,l=1,mu_0=1,g=1,alpha=0.1)
+sim.add_magnet(Magnet(np.array([1,1]), np.array([1,1])))
+
+sim.simulate((0,50), (0,0))
