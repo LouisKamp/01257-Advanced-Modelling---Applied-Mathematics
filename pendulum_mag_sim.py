@@ -36,11 +36,10 @@ class Pendulum():
             t_num_eval = 10*(time_interval[1] - time_interval[0])
         
         # setup
-        f = self.create_f()
         ts = np.linspace(time_interval[0],time_interval[1],t_num_eval)
 
         # solve
-        sol = solve_ivp(f, (time_interval[0],time_interval[1]), np.array([initial_condition[0],initial_condition[1]]), t_eval=ts)
+        sol = solve_ivp(self.f, (time_interval[0],time_interval[1]), np.array([initial_condition[0],initial_condition[1]]), t_eval=ts)
         phis  = sol.y[0]
         d_phis = sol.y[1]
 
@@ -84,17 +83,14 @@ class Pendulum():
 
         return phis, d_phis
 
-    def create_f(self):
-        def f(t:float,y:np.ndarray) -> np.ndarray:
-            sol_g = -self.g*np.sin(y[0]) / self.l
-            sol_m = np.sum([
-                0.0694200459087245*self.m_p*self.mu_0*(-2.0*self.l**4*magnet.moment[0]*np.sin(y[0]) + 2.0*self.l**4*magnet.moment[1]*np.cos(y[0]) - 2.0*self.l**3*magnet.moment[0]*magnet.position[0]*np.sin(2.0*y[0]) + 2.0*self.l**3*magnet.moment[0]*magnet.position[1]*np.cos(2.0*y[0]) + 7.0*self.l**3*magnet.moment[0]*magnet.position[1] + 2.0*self.l**3*magnet.moment[1]*magnet.position[0]*np.cos(2.0*y[0]) - 7.0*self.l**3*magnet.moment[1]*magnet.position[0] + 2.0*self.l**3*magnet.moment[1]*magnet.position[1]*np.sin(2.0*y[0]) + 11.25*self.l**2*magnet.moment[0]*magnet.position[0]**2*np.sin(y[0]) + 0.25*self.l**2*magnet.moment[0]*magnet.position[0]**2*np.sin(3.0*y[0]) - 14.5*self.l**2*magnet.moment[0]*magnet.position[0]*magnet.position[1]*np.cos(y[0]) - 0.5*self.l**2*magnet.moment[0]*magnet.position[0]*magnet.position[1]*np.cos(3.0*y[0]) - 3.25*self.l**2*magnet.moment[0]*magnet.position[1]**2*np.sin(y[0]) - 0.25*self.l**2*magnet.moment[0]*magnet.position[1]**2*np.sin(3.0*y[0]) + 3.25*self.l**2*magnet.moment[1]*magnet.position[0]**2*np.cos(y[0]) - 0.25*self.l**2*magnet.moment[1]*magnet.position[0]**2*np.cos(3.0*y[0]) + 14.5*self.l**2*magnet.moment[1]*magnet.position[0]*magnet.position[1]*np.sin(y[0]) - 0.5*self.l**2*magnet.moment[1]*magnet.position[0]*magnet.position[1]*np.sin(3.0*y[0]) - 11.25*self.l**2*magnet.moment[1]*magnet.position[1]**2*np.cos(y[0]) + 0.25*self.l**2*magnet.moment[1]*magnet.position[1]**2*np.cos(3.0*y[0]) - 2.0*self.l*magnet.moment[0]*magnet.position[0]**3*np.sin(2.0*y[0]) + 6.5*self.l*magnet.moment[0]*magnet.position[0]**2*magnet.position[1]*np.cos(2.0*y[0]) - 3.5*self.l*magnet.moment[0]*magnet.position[0]**2*magnet.position[1] + 7.0*self.l*magnet.moment[0]*magnet.position[0]*magnet.position[1]**2*np.sin(2.0*y[0]) - 2.5*self.l*magnet.moment[0]*magnet.position[1]**3*np.cos(2.0*y[0]) - 3.5*self.l*magnet.moment[0]*magnet.position[1]**3 - 2.5*self.l*magnet.moment[1]*magnet.position[0]**3*np.cos(2.0*y[0]) + 3.5*self.l*magnet.moment[1]*magnet.position[0]**3 - 7.0*self.l*magnet.moment[1]*magnet.position[0]**2*magnet.position[1]*np.sin(2.0*y[0]) + 6.5*self.l*magnet.moment[1]*magnet.position[0]*magnet.position[1]**2*np.cos(2.0*y[0]) + 3.5*self.l*magnet.moment[1]*magnet.position[0]*magnet.position[1]**2 + 2.0*self.l*magnet.moment[1]*magnet.position[1]**3*np.sin(2.0*y[0]) - 2.0*magnet.moment[0]*magnet.position[0]**4*np.sin(y[0]) + 3.0*magnet.moment[0]*magnet.position[0]**3*magnet.position[1]*np.cos(y[0]) - magnet.moment[0]*magnet.position[0]**2*magnet.position[1]**2*np.sin(y[0]) + 3.0*magnet.moment[0]*magnet.position[0]*magnet.position[1]**3*np.cos(y[0]) + magnet.moment[0]*magnet.position[1]**4*np.sin(y[0]) - magnet.moment[1]*magnet.position[0]**4*np.cos(y[0]) - 3.0*magnet.moment[1]*magnet.position[0]**3*magnet.position[1]*np.sin(y[0]) + magnet.moment[1]*magnet.position[0]**2*magnet.position[1]**2*np.cos(y[0]) - 3.0*magnet.moment[1]*magnet.position[0]*magnet.position[1]**3*np.sin(y[0]) + 2.0*magnet.moment[1]*magnet.position[1]**4*np.cos(y[0]))/(self.M_p*self.l**2*(0.5*self.l**2 - self.l*magnet.position[0]*np.cos(y[0]) - self.l*magnet.position[1]*np.sin(y[0]) + 0.5*magnet.position[0]**2 + 0.5*magnet.position[1]**2)**(7/2))
-                for magnet in self.magnets
-            ])
-            sol_alpha = -(self.alpha * y[1]) / (self.M_p * self.l**2)
-            return np.array([y[1], sol_g + sol_alpha + sol_m])
-
-        return f
+    def f(self, t:float,y:np.ndarray) -> np.ndarray:
+        sol_g = -self.g*np.sin(y[0]) / self.l
+        sol_m = np.sum([
+            0.0694200459087245*self.m_p*self.mu_0*(-2.0*self.l**4*magnet.moment[0]*np.sin(y[0]) + 2.0*self.l**4*magnet.moment[1]*np.cos(y[0]) - 2.0*self.l**3*magnet.moment[0]*magnet.position[0]*np.sin(2.0*y[0]) + 2.0*self.l**3*magnet.moment[0]*magnet.position[1]*np.cos(2.0*y[0]) + 7.0*self.l**3*magnet.moment[0]*magnet.position[1] + 2.0*self.l**3*magnet.moment[1]*magnet.position[0]*np.cos(2.0*y[0]) - 7.0*self.l**3*magnet.moment[1]*magnet.position[0] + 2.0*self.l**3*magnet.moment[1]*magnet.position[1]*np.sin(2.0*y[0]) + 11.25*self.l**2*magnet.moment[0]*magnet.position[0]**2*np.sin(y[0]) + 0.25*self.l**2*magnet.moment[0]*magnet.position[0]**2*np.sin(3.0*y[0]) - 14.5*self.l**2*magnet.moment[0]*magnet.position[0]*magnet.position[1]*np.cos(y[0]) - 0.5*self.l**2*magnet.moment[0]*magnet.position[0]*magnet.position[1]*np.cos(3.0*y[0]) - 3.25*self.l**2*magnet.moment[0]*magnet.position[1]**2*np.sin(y[0]) - 0.25*self.l**2*magnet.moment[0]*magnet.position[1]**2*np.sin(3.0*y[0]) + 3.25*self.l**2*magnet.moment[1]*magnet.position[0]**2*np.cos(y[0]) - 0.25*self.l**2*magnet.moment[1]*magnet.position[0]**2*np.cos(3.0*y[0]) + 14.5*self.l**2*magnet.moment[1]*magnet.position[0]*magnet.position[1]*np.sin(y[0]) - 0.5*self.l**2*magnet.moment[1]*magnet.position[0]*magnet.position[1]*np.sin(3.0*y[0]) - 11.25*self.l**2*magnet.moment[1]*magnet.position[1]**2*np.cos(y[0]) + 0.25*self.l**2*magnet.moment[1]*magnet.position[1]**2*np.cos(3.0*y[0]) - 2.0*self.l*magnet.moment[0]*magnet.position[0]**3*np.sin(2.0*y[0]) + 6.5*self.l*magnet.moment[0]*magnet.position[0]**2*magnet.position[1]*np.cos(2.0*y[0]) - 3.5*self.l*magnet.moment[0]*magnet.position[0]**2*magnet.position[1] + 7.0*self.l*magnet.moment[0]*magnet.position[0]*magnet.position[1]**2*np.sin(2.0*y[0]) - 2.5*self.l*magnet.moment[0]*magnet.position[1]**3*np.cos(2.0*y[0]) - 3.5*self.l*magnet.moment[0]*magnet.position[1]**3 - 2.5*self.l*magnet.moment[1]*magnet.position[0]**3*np.cos(2.0*y[0]) + 3.5*self.l*magnet.moment[1]*magnet.position[0]**3 - 7.0*self.l*magnet.moment[1]*magnet.position[0]**2*magnet.position[1]*np.sin(2.0*y[0]) + 6.5*self.l*magnet.moment[1]*magnet.position[0]*magnet.position[1]**2*np.cos(2.0*y[0]) + 3.5*self.l*magnet.moment[1]*magnet.position[0]*magnet.position[1]**2 + 2.0*self.l*magnet.moment[1]*magnet.position[1]**3*np.sin(2.0*y[0]) - 2.0*magnet.moment[0]*magnet.position[0]**4*np.sin(y[0]) + 3.0*magnet.moment[0]*magnet.position[0]**3*magnet.position[1]*np.cos(y[0]) - magnet.moment[0]*magnet.position[0]**2*magnet.position[1]**2*np.sin(y[0]) + 3.0*magnet.moment[0]*magnet.position[0]*magnet.position[1]**3*np.cos(y[0]) + magnet.moment[0]*magnet.position[1]**4*np.sin(y[0]) - magnet.moment[1]*magnet.position[0]**4*np.cos(y[0]) - 3.0*magnet.moment[1]*magnet.position[0]**3*magnet.position[1]*np.sin(y[0]) + magnet.moment[1]*magnet.position[0]**2*magnet.position[1]**2*np.cos(y[0]) - 3.0*magnet.moment[1]*magnet.position[0]*magnet.position[1]**3*np.sin(y[0]) + 2.0*magnet.moment[1]*magnet.position[1]**4*np.cos(y[0]))/(self.M_p*self.l**2*(0.5*self.l**2 - self.l*magnet.position[0]*np.cos(y[0]) - self.l*magnet.position[1]*np.sin(y[0]) + 0.5*magnet.position[0]**2 + 0.5*magnet.position[1]**2)**(7/2))
+            for magnet in self.magnets
+        ])
+        sol_alpha = -(self.alpha * y[1]) / (self.M_p * self.l**2)
+        return np.array([y[1], sol_g + sol_alpha + sol_m])
 
 if __name__ == "__main__":
     # Sim 1: Pendulum should end in the left hand side of the plot
