@@ -142,4 +142,4 @@ if __name__ == "__main__":
     sim = Pendulum(M_p=1,m_p=0.1,l=1,mu_0=1,g=1,alpha=1)
     sim.add_magnet(Magnet(np.array([1,1]), np.array([1,1])))
 
-    sim.simulate((0,100), (0,0))
+    sim.simulate((0,100), (0,1))
