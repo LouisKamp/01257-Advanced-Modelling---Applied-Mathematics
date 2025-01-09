@@ -1,8 +1,10 @@
 from dataclasses import dataclass
+from itertools import product
 from scipy.integrate import solve_ivp
 import numpy as np
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
+from scipy.optimize import root
 
 @dataclass
 class Magnet():
@@ -47,9 +49,12 @@ class Pendulum():
         ys = np.sin(phis)
 
         if show_plots:
+            # find roots
+            roots = self.roots()
+
             # animation
             fig, ax = plt.subplots()
-            line, = ax.plot([], [], 'o-', lw=2)
+            line, = ax.plot([], [], 'o-', lw=2, alpha=0.5)
             ax.set_xlim(-2, 2)
             ax.set_ylim(-2, 2)
             ax.invert_yaxis()
@@ -72,11 +77,13 @@ class Pendulum():
             plt.ylabel("x")
             plt.legend()
             ani = FuncAnimation(fig, update, frames=len(ts), init_func=init, blit=True, interval=10)
+            plt.scatter([self.l*np.sin(root[0]) for root in roots], [self.l*np.cos(root[0]) for root in roots], color='red')
             ax.set_aspect('equal')
             plt.show()
 
             # phase plot
             plt.quiver(phis[:-1], d_phis[:-1], np.diff(phis), np.diff(d_phis), scale_units='xy', angles='xy', scale=1, width=0.0025)
+            plt.scatter([root[0] for root in roots], [root[1] for root in roots], color='red')
             plt.xlabel("Phi")
             plt.ylabel("d_Phi")
             plt.show()
@@ -85,13 +92,30 @@ class Pendulum():
 
     def f(self, t:float,y:np.ndarray) -> np.ndarray:
         sol_g = -self.g*np.sin(y[0]) / self.l
-        sol_m = np.sum([
+        sol_m = np.sum(np.array([
             0.0694200459087245*self.m_p*self.mu_0*(-2.0*self.l**4*magnet.moment[0]*np.sin(y[0]) + 2.0*self.l**4*magnet.moment[1]*np.cos(y[0]) - 2.0*self.l**3*magnet.moment[0]*magnet.position[0]*np.sin(2.0*y[0]) + 2.0*self.l**3*magnet.moment[0]*magnet.position[1]*np.cos(2.0*y[0]) + 7.0*self.l**3*magnet.moment[0]*magnet.position[1] + 2.0*self.l**3*magnet.moment[1]*magnet.position[0]*np.cos(2.0*y[0]) - 7.0*self.l**3*magnet.moment[1]*magnet.position[0] + 2.0*self.l**3*magnet.moment[1]*magnet.position[1]*np.sin(2.0*y[0]) + 11.25*self.l**2*magnet.moment[0]*magnet.position[0]**2*np.sin(y[0]) + 0.25*self.l**2*magnet.moment[0]*magnet.position[0]**2*np.sin(3.0*y[0]) - 14.5*self.l**2*magnet.moment[0]*magnet.position[0]*magnet.position[1]*np.cos(y[0]) - 0.5*self.l**2*magnet.moment[0]*magnet.position[0]*magnet.position[1]*np.cos(3.0*y[0]) - 3.25*self.l**2*magnet.moment[0]*magnet.position[1]**2*np.sin(y[0]) - 0.25*self.l**2*magnet.moment[0]*magnet.position[1]**2*np.sin(3.0*y[0]) + 3.25*self.l**2*magnet.moment[1]*magnet.position[0]**2*np.cos(y[0]) - 0.25*self.l**2*magnet.moment[1]*magnet.position[0]**2*np.cos(3.0*y[0]) + 14.5*self.l**2*magnet.moment[1]*magnet.position[0]*magnet.position[1]*np.sin(y[0]) - 0.5*self.l**2*magnet.moment[1]*magnet.position[0]*magnet.position[1]*np.sin(3.0*y[0]) - 11.25*self.l**2*magnet.moment[1]*magnet.position[1]**2*np.cos(y[0]) + 0.25*self.l**2*magnet.moment[1]*magnet.position[1]**2*np.cos(3.0*y[0]) - 2.0*self.l*magnet.moment[0]*magnet.position[0]**3*np.sin(2.0*y[0]) + 6.5*self.l*magnet.moment[0]*magnet.position[0]**2*magnet.position[1]*np.cos(2.0*y[0]) - 3.5*self.l*magnet.moment[0]*magnet.position[0]**2*magnet.position[1] + 7.0*self.l*magnet.moment[0]*magnet.position[0]*magnet.position[1]**2*np.sin(2.0*y[0]) - 2.5*self.l*magnet.moment[0]*magnet.position[1]**3*np.cos(2.0*y[0]) - 3.5*self.l*magnet.moment[0]*magnet.position[1]**3 - 2.5*self.l*magnet.moment[1]*magnet.position[0]**3*np.cos(2.0*y[0]) + 3.5*self.l*magnet.moment[1]*magnet.position[0]**3 - 7.0*self.l*magnet.moment[1]*magnet.position[0]**2*magnet.position[1]*np.sin(2.0*y[0]) + 6.5*self.l*magnet.moment[1]*magnet.position[0]*magnet.position[1]**2*np.cos(2.0*y[0]) + 3.5*self.l*magnet.moment[1]*magnet.position[0]*magnet.position[1]**2 + 2.0*self.l*magnet.moment[1]*magnet.position[1]**3*np.sin(2.0*y[0]) - 2.0*magnet.moment[0]*magnet.position[0]**4*np.sin(y[0]) + 3.0*magnet.moment[0]*magnet.position[0]**3*magnet.position[1]*np.cos(y[0]) - magnet.moment[0]*magnet.position[0]**2*magnet.position[1]**2*np.sin(y[0]) + 3.0*magnet.moment[0]*magnet.position[0]*magnet.position[1]**3*np.cos(y[0]) + magnet.moment[0]*magnet.position[1]**4*np.sin(y[0]) - magnet.moment[1]*magnet.position[0]**4*np.cos(y[0]) - 3.0*magnet.moment[1]*magnet.position[0]**3*magnet.position[1]*np.sin(y[0]) + magnet.moment[1]*magnet.position[0]**2*magnet.position[1]**2*np.cos(y[0]) - 3.0*magnet.moment[1]*magnet.position[0]*magnet.position[1]**3*np.sin(y[0]) + 2.0*magnet.moment[1]*magnet.position[1]**4*np.cos(y[0]))/(self.M_p*self.l**2*(0.5*self.l**2 - self.l*magnet.position[0]*np.cos(y[0]) - self.l*magnet.position[1]*np.sin(y[0]) + 0.5*magnet.position[0]**2 + 0.5*magnet.position[1]**2)**(7/2))
             for magnet in self.magnets
-        ])
+        ]), axis=0)
         sol_alpha = -(self.alpha * y[1]) / (self.M_p * self.l**2)
         return np.array([y[1], sol_g + sol_alpha + sol_m])
+    
+    def roots(self):
+        phis =  np.linspace(-2*np.pi, 2*np.pi, 10)
+        dphis = np.linspace(1, 1, 10)
 
+        guesses = list(product(phis, dphis))
+
+        # guesses = [(1, 0),(0, 2)]
+
+        roots = []
+        F = lambda y: self.f(0, y)
+
+        for guess in guesses:
+            sol = root(F, guess)
+            if sol.success:
+                if not any(np.allclose(sol.x, r) for r in roots):
+                    roots.append(sol.x)
+        return roots
 if __name__ == "__main__":
     # Sim 1: Pendulum should end in the left hand side of the plot
     sim = Pendulum(M_p=1,m_p=1,l=1,mu_0=1,g=1,alpha=0.1)
@@ -111,4 +135,4 @@ if __name__ == "__main__":
     sim = Pendulum(M_p=1,m_p=0.1,l=1,mu_0=1,g=1,alpha=1)
     sim.add_magnet(Magnet(np.array([1,1]), np.array([1,1])))
 
-    sim.simulate((0,100), (np.pi/4,4))
+    sim.simulate((0,100), (0,0))
