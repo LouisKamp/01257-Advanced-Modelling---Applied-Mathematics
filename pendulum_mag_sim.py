@@ -100,7 +100,7 @@ class Pendulum():
         return np.array([y[1], sol_g + sol_alpha + sol_m])
     
     def roots(self):
-        phis =  np.linspace(-2*np.pi, 2*np.pi, 10)
+        phis =  np.linspace(-2*np.pi, 2*np.pi, 100)
         dphis = np.linspace(1, 1, 10)
 
         guesses = list(product(phis, dphis))
@@ -115,7 +115,7 @@ class Pendulum():
             if sol.success:
                 if not any(np.allclose(sol.x, r) for r in roots):
                     roots.append(sol.x)
-        return roots
+        return np.array(roots)
     
     def eigenvalues(self, steady_state):
         lin_Ug = -self.g*np.cos(steady_state)/self.l
