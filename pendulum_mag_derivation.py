@@ -28,13 +28,13 @@ B_1 = (mu_0 / 4*pi)*( 3*r_hat * r_hat.dot(m_1) - m_1 ) / (r_norm**3)
 U_1 = simplify(-m_p.dot(B_1))
 
 #%%
-V = 0*U_g + U_1
+V = U_g + U_1
 T = 0.5 * M_p * ( diff(x_p,t)**2 + diff(y_p,t)**2 )
 L = simplify(T - V)
 
 # %%
 
-sol = Eq(diff(L, phi) - diff(diff(L, phi_dot),t), 0*alpha*phi_dot)
+sol = Eq(diff(L, phi) - diff(diff(L, phi_dot),t), alpha*phi_dot)
 #%%
 sol
 # %%
@@ -50,4 +50,29 @@ phi_1, d_phi = symbols("phi d_{phi}")
 
 pycode(phi_t_t.subs({phi: phi_1, phi_dot: d_phi}))
 
+# %% Lineraize
+from sympy.printing.pycode import pycode
+z1, z2 = phi, phi_dot
+z1_dot = z2
+z2_dot = phi_t_t
+
+J = Matrix(
+    [[diff(z1_dot, z1), diff(z1_dot, z2)], 
+    [diff(z2_dot, z1), diff(z2_dot, z2)]]
+    )
+phi_1, d_phi = symbols("phi d_{phi}")
+pycode(A.subs({phi: phi_1, phi_dot: d_phi}))
+# %% Linearize without Phi_t_t
+from sympy.printing.pycode import pycode
+z1, z2 = phi, phi_dot
+z1_dot = z2
+L1 = diff(U_g, phi) + diff(U_1, phi)
+z2_dot = L1/(M_p * l**2)
+
+J = Matrix(
+    [[diff(z1_dot, z1), diff(z1_dot, z2)], 
+    [diff(z2_dot, z1), diff(z2_dot, z2)]]
+    )
+phi_1, d_phi = symbols("phi d_{phi}")
+pycode(A.subs({phi: phi_1, phi_dot: d_phi}))
 # %%
