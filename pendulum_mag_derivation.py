@@ -14,7 +14,7 @@ y_p = l * sin(phi)
 U_g =  -M_p * g *x_p
 # %%
 
-x_1, y_1 = symbols("x_1, y_1")
+x_1, y_1 = symbols("x_1, y_1")          # Position of magnet
 m_1_x, m_1_y = symbols("m_1_x, m_1_y")
 
 r = Matrix([x_p - x_1, y_p - y_1])
@@ -75,4 +75,8 @@ J = Matrix(
     )
 phi_1, d_phi = symbols("phi d_{phi}")
 pycode(J.subs({phi: phi_1, phi_dot: d_phi}))
+# %%
+phi_1, d_phi = symbols("phi d_{phi}")
+
+pycode(V.subs({phi: phi_1, phi_dot: d_phi}))
 # %%
