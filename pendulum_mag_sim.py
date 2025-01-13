@@ -136,10 +136,28 @@ if __name__ == "__main__":
     sim.add_magnet(Magnet(np.array([1.5,1]), np.array([0.5,0])))
     sim.add_magnet(Magnet(np.array([1.5,-1]), np.array([0.5,0])))
 
-    # sim.simulate((0,50), (0.1,0))
+    sim.simulate((0,50), (0.1,0))
 
     # Sim 3: Pendulum should be pushed a little to the left
     sim = Pendulum(M_p=1,m_p=0.1,l=1,mu_0=1,g=1,alpha=1)
     sim.add_magnet(Magnet(np.array([1,1]), np.array([1,1])))
 
-    sim.simulate((0,100), (0,1))
+    sim.simulate((0,100), (-np.pi, -1))
+
+    # Sim 4: Pendulum starts upside down with a magnet below
+    sim = Pendulum(M_p=1, m_p=1, l=1, mu_0=1, g=1, alpha=0.1)
+
+    # Constants
+    M_p = 1.0
+    m_p = 1
+    g = 1.0
+    l = 1.0
+    m_p_abs = 1.0
+    mu_0 = 1.0
+    m_1_x = 1.0
+    y_1 = 1.0
+    x_1 = 1.0
+    m_1_y = 1.0
+    alpha = 0.1
+
+    sim = Pendulum(M_p=M_p,m_p=m_p,l=l,mu_0=mu_0,g=g,alpha=alpha)
