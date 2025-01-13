@@ -61,12 +61,12 @@ J = Matrix(
     [diff(z2_dot, z1), diff(z2_dot, z2)]]
     )
 phi_1, d_phi = symbols("phi d_{phi}")
-pycode(A.subs({phi: phi_1, phi_dot: d_phi}))
+pycode(J.subs({phi: phi_1, phi_dot: d_phi}))
 # %% Linearize without Phi_t_t
 from sympy.printing.pycode import pycode
 z1, z2 = phi, phi_dot
 z1_dot = z2
-L1 = diff(U_g, phi) + diff(U_1, phi)
+L1 = diff(U_g, phi) + 0 * diff(U_1, phi)
 z2_dot = L1/(M_p * l**2)
 
 J = Matrix(
@@ -74,5 +74,5 @@ J = Matrix(
     [diff(z2_dot, z1), diff(z2_dot, z2)]]
     )
 phi_1, d_phi = symbols("phi d_{phi}")
-pycode(A.subs({phi: phi_1, phi_dot: d_phi}))
+pycode(J.subs({phi: phi_1, phi_dot: d_phi}))
 # %%
