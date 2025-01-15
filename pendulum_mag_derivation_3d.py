@@ -32,24 +32,24 @@ m_1 = Matrix([m_1_x, m_1_y, m_1_z])
 m_p = m_p_abs*Matrix([cos(phi), sin(phi), cos(theta)])
 
 B_1 = (mu_0 / 4*pi)*( 3*r_hat * r_hat.dot(m_1) - m_1 ) / (r_norm**3)
-U_1 = -m_p.dot(B_1)
+U_1 = simplify(-m_p.dot(B_1))
 
 #%%
-V = 0*U_g + 0*U_1
-T = 0.5 * M_p * ( diff(x_p,t)**2 + diff(y_p,t)**2 + diff(z_p,t)**2 )
+V = 0*U_g + U_1
+T = simplify(0.5 * M_p * ( diff(x_p,t)**2 + diff(y_p,t)**2 + diff(z_p,t)**2 ))
 L = T - V
 
 # %%
 P_phi =  diff(L, phi)
 P_phi_sym = symbols("P_{phi}")
 
-sol_phi = Eq(P_phi_sym - diff(diff(L, phi_dot),t), alpha*(phi_dot))
+sol_phi = Eq(P_phi_sym - diff(diff(L, phi_dot),t), 0*alpha*(phi_dot))
 phi_t_t = solve(sol_phi, diff(phi,t,t))[0].subs({P_phi_sym: P_phi})
 
 #%%
 P_theta =  diff(L, theta)
 P_theta_sym = symbols("P_{theta}")
-sol_theta = Eq(P_theta_sym - diff(diff(L, theta_dot),t), alpha*(theta_dot))
+sol_theta = Eq(P_theta_sym - diff(diff(L, theta_dot),t), 0*alpha*(theta_dot))
 
 theta_t_t = solve(sol_theta, diff(theta,t,t))[0].subs({P_theta_sym: P_theta})
 
