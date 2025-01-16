@@ -1,11 +1,14 @@
+#%%
 from dataclasses import dataclass
 from itertools import product
+from matplotlib.colors import ListedColormap
+from matplotlib.patches import Patch
 from scipy.integrate import solve_ivp
 import numpy as np
 from matplotlib.animation import FuncAnimation
 import matplotlib.pyplot as plt
 from scipy.optimize import root
-
+#%%
 @dataclass
 class Magnet():
     position: np.ndarray    # [x,y]-position in modified coordinate system
@@ -21,7 +24,7 @@ class Pendulum():
 
     magnets: list[Magnet]
 
-    def __init__(self, M_p, m_p: float, l: float, mu_0: float, g: float, alpha: float):
+    def __init__(self, M_p: float, m_p: float, l: float, mu_0: float, g: float, alpha: float):
         self.M_p = M_p
         self.m_p = m_p
         self.l = l
@@ -36,7 +39,7 @@ class Pendulum():
     def simulate(self, time_interval: tuple[float,float], initial_condition: tuple[float, float, float, float], show_plots=True):
         ts = None
         if show_plots == True:
-            t_num_eval = int(10*(time_interval[1] - time_interval[0]))
+            t_num_eval = int(30*(time_interval[1] - time_interval[0]))
             ts = np.linspace(time_interval[0],time_interval[1],t_num_eval)
 
         # def event(t, y):
@@ -78,7 +81,7 @@ class Pendulum():
                 trace.set_3d_properties([])
                 return line, trace
 
-            trace_len = 10
+            trace_len = 20
             def update(frame):
                 line.set_data([0, ys[frame]], [0, zs[frame]])
                 line.set_3d_properties([0, xs[frame]])
@@ -99,9 +102,10 @@ class Pendulum():
             roots_y = self.l * np.sin(roots_theta) * np.sin(roots_phi)
             roots_z = self.l * np.cos(roots_theta)
 
-            ax.scatter(roots_y, roots_z,roots_x, color='r', label='Roots')
+            ax.scatter(roots_y, roots_z, roots_x, color='r', marker='*', label='Roots')
+            ax.legend(loc='center left', bbox_to_anchor=(1.2, 0.5))
 
-            ani = FuncAnimation(fig, update, frames=len(ts), init_func=init, blit=True)
+            ani = FuncAnimation(fig, update, frames=len(ts), init_func=init, blit=True, interval=30)
             ax.set_aspect('equal')
             ax.set_xlabel('Y')
             ax.set_ylabel('Z')
@@ -115,12 +119,12 @@ class Pendulum():
         sol_g_phi = -(2.0*y[1]*y[3]*self.l*np.cos(y[2]) + self.g*np.sin(y[0]))/(self.l*np.sin(y[2]))
 
         sol_m_phi = np.sum(np.array([
-            (-self.M_p*y[1]*y[3]*self.l**2*np.sin(2.0*y[2]) - 1/4*np.pi*self.m_p*self.mu_0*(-5*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[2])*np.cos(y[0]) + 5*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.sin(y[0])*np.sin(y[2]))*((magnet.moment[0]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.cos(y[0]) + (magnet.moment[1]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[0]) + (magnet.moment[2]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.cos(y[2]))/((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2)**(7/2) - 1/4*np.pi*self.m_p*self.mu_0*(-(magnet.moment[0]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[0]) + (magnet.moment[1]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.cos(y[0]) + (magnet.moment[2]*(2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[2])*np.cos(y[0]) - 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.sin(y[0])*np.sin(y[2])) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(-self.l*magnet.moment[0]*np.sin(y[0])*np.sin(y[2]) + self.l*magnet.moment[1]*np.sin(y[2])*np.cos(y[0])))*np.cos(y[2]) + (3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.sin(y[0])*np.sin(y[2]) + magnet.moment[0]*(2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[2])*np.cos(y[0]) - 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.sin(y[0])*np.sin(y[2])) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(-self.l*magnet.moment[0]*np.sin(y[0])*np.sin(y[2]) + self.l*magnet.moment[1]*np.sin(y[2])*np.cos(y[0])))*np.cos(y[0]) + (-3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.sin(y[2])*np.cos(y[0]) + magnet.moment[1]*(2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[2])*np.cos(y[0]) - 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.sin(y[0])*np.sin(y[2])) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(-self.l*magnet.moment[0]*np.sin(y[0])*np.sin(y[2]) + self.l*magnet.moment[1]*np.sin(y[2])*np.cos(y[0])))*np.sin(y[0]))/((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2)**(5/2))/(self.M_p*self.l**2*np.sin(y[2])**2)
+            (-self.M_p*y[1]*y[3]*self.l**2*np.sin(2.0*y[2]) - 1/4*np.pi*self.l*self.m_p*self.mu_0*(-5*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[2])*np.cos(y[0]) + 5*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.sin(y[0])*np.sin(y[2]))*((magnet.moment[0]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[2])*np.cos(y[0]) + (magnet.moment[1]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[0])*np.sin(y[2]) + (magnet.moment[2]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.cos(y[2]))/((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2)**(7/2) - 1/4*np.pi*self.l*self.m_p*self.mu_0*(-(magnet.moment[0]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[0])*np.sin(y[2]) + (magnet.moment[1]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[2])*np.cos(y[0]) + (magnet.moment[2]*(2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[2])*np.cos(y[0]) - 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.sin(y[0])*np.sin(y[2])) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(-self.l*magnet.moment[0]*np.sin(y[0])*np.sin(y[2]) + self.l*magnet.moment[1]*np.sin(y[2])*np.cos(y[0])))*np.cos(y[2]) + (3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.sin(y[0])*np.sin(y[2]) + magnet.moment[0]*(2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[2])*np.cos(y[0]) - 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.sin(y[0])*np.sin(y[2])) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(-self.l*magnet.moment[0]*np.sin(y[0])*np.sin(y[2]) + self.l*magnet.moment[1]*np.sin(y[2])*np.cos(y[0])))*np.sin(y[2])*np.cos(y[0]) + (-3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.sin(y[2])*np.cos(y[0]) + magnet.moment[1]*(2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[2])*np.cos(y[0]) - 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.sin(y[0])*np.sin(y[2])) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(-self.l*magnet.moment[0]*np.sin(y[0])*np.sin(y[2]) + self.l*magnet.moment[1]*np.sin(y[2])*np.cos(y[0])))*np.sin(y[0])*np.sin(y[2]))/((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2)**(5/2))/(self.M_p*self.l**2*np.sin(y[2])**2)
             for magnet in self.magnets
         ]), axis=0)
 
         sol_m_theta = np.sum(np.array([
-            (1.0*self.M_p*y[1]**2*self.l**2*np.sin(y[2])*np.cos(y[2]) - 1/4*np.pi*self.m_p*self.mu_0*((magnet.moment[0]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.cos(y[0]) + (magnet.moment[1]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[0]) + (magnet.moment[2]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.cos(y[2]))*(5*self.l*(self.l*np.cos(y[2]) - magnet.position[2])*np.sin(y[2]) - 5*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[0])*np.cos(y[2]) - 5*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.cos(y[0])*np.cos(y[2]))/((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2)**(7/2) - 1/4*np.pi*self.m_p*self.mu_0*(-(magnet.moment[2]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[2]) + (3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.sin(y[2]) + magnet.moment[2]*(-2*self.l*(self.l*np.cos(y[2]) - magnet.position[2])*np.sin(y[2]) + 2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[0])*np.cos(y[2]) + 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.cos(y[0])*np.cos(y[2])) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(self.l*magnet.moment[0]*np.cos(y[0])*np.cos(y[2]) + self.l*magnet.moment[1]*np.sin(y[0])*np.cos(y[2]) - self.l*magnet.moment[2]*np.sin(y[2])))*np.cos(y[2]) + (-3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.sin(y[0])*np.cos(y[2]) + magnet.moment[1]*(-2*self.l*(self.l*np.cos(y[2]) - magnet.position[2])*np.sin(y[2]) + 2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[0])*np.cos(y[2]) + 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.cos(y[0])*np.cos(y[2])) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(self.l*magnet.moment[0]*np.cos(y[0])*np.cos(y[2]) + self.l*magnet.moment[1]*np.sin(y[0])*np.cos(y[2]) - self.l*magnet.moment[2]*np.sin(y[2])))*np.sin(y[0]) + (-3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.cos(y[0])*np.cos(y[2]) + magnet.moment[0]*(-2*self.l*(self.l*np.cos(y[2]) - magnet.position[2])*np.sin(y[2]) + 2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[0])*np.cos(y[2]) + 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.cos(y[0])*np.cos(y[2])) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(self.l*magnet.moment[0]*np.cos(y[0])*np.cos(y[2]) + self.l*magnet.moment[1]*np.sin(y[0])*np.cos(y[2]) - self.l*magnet.moment[2]*np.sin(y[2])))*np.cos(y[0]))/((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2)**(5/2))/(self.M_p*self.l**2)
+            (1.0*self.M_p*y[1]**2*self.l**2*np.sin(y[2])*np.cos(y[2]) - 1/4*np.pi*self.l*self.m_p*self.mu_0*(5*self.l*(self.l*np.cos(y[2]) - magnet.position[2])*np.sin(y[2]) - 5*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[0])*np.cos(y[2]) - 5*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.cos(y[0])*np.cos(y[2]))*((magnet.moment[0]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[2])*np.cos(y[0]) + (magnet.moment[1]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[0])*np.sin(y[2]) + (magnet.moment[2]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.cos(y[2]))/((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2)**(7/2) - 1/4*np.pi*self.l*self.m_p*self.mu_0*((magnet.moment[0]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.cos(y[0])*np.cos(y[2]) + (magnet.moment[1]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[0])*np.cos(y[2]) - (magnet.moment[2]*((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2])))*np.sin(y[2]) + (3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.sin(y[2]) + magnet.moment[2]*(-2*self.l*(self.l*np.cos(y[2]) - magnet.position[2])*np.sin(y[2]) + 2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[0])*np.cos(y[2]) + 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.cos(y[0])*np.cos(y[2])) - 3*(self.l*np.cos(y[2]) - magnet.position[2])*(self.l*magnet.moment[0]*np.cos(y[0])*np.cos(y[2]) + self.l*magnet.moment[1]*np.sin(y[0])*np.cos(y[2]) - self.l*magnet.moment[2]*np.sin(y[2])))*np.cos(y[2]) + (-3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.sin(y[0])*np.cos(y[2]) + magnet.moment[1]*(-2*self.l*(self.l*np.cos(y[2]) - magnet.position[2])*np.sin(y[2]) + 2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[0])*np.cos(y[2]) + 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.cos(y[0])*np.cos(y[2])) - 3*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*(self.l*magnet.moment[0]*np.cos(y[0])*np.cos(y[2]) + self.l*magnet.moment[1]*np.sin(y[0])*np.cos(y[2]) - self.l*magnet.moment[2]*np.sin(y[2])))*np.sin(y[0])*np.sin(y[2]) + (-3*self.l*(magnet.moment[0]*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(y[2]) - magnet.position[2]))*np.cos(y[0])*np.cos(y[2]) + magnet.moment[0]*(-2*self.l*(self.l*np.cos(y[2]) - magnet.position[2])*np.sin(y[2]) + 2*self.l*(self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])*np.sin(y[0])*np.cos(y[2]) + 2*self.l*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*np.cos(y[0])*np.cos(y[2])) - 3*(self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])*(self.l*magnet.moment[0]*np.cos(y[0])*np.cos(y[2]) + self.l*magnet.moment[1]*np.sin(y[0])*np.cos(y[2]) - self.l*magnet.moment[2]*np.sin(y[2])))*np.sin(y[2])*np.cos(y[0]))/((self.l*np.cos(y[2]) - magnet.position[2])**2 + (self.l*np.sin(y[0])*np.sin(y[2]) - magnet.position[1])**2 + (self.l*np.sin(y[2])*np.cos(y[0]) - magnet.position[0])**2)**(5/2))/(self.M_p*self.l**2)
             for magnet in self.magnets
         ]), axis=0)
 
@@ -150,18 +154,27 @@ class Pendulum():
                     roots.append(sol.x)
         return np.array(roots)
 
-if __name__ == "__main__0":
+if __name__ == "__main__":
+    sim = Pendulum(M_p=0.1,m_p=1,l=1,mu_0=1,g=1,alpha=0.2)
+    sim.add_magnet(Magnet(np.array([1.5,1,1]), np.array([1,0,0])))
+    sim.add_magnet(Magnet(np.array([1.5,-1,1]), np.array([1,0,0])))
+    sim.add_magnet(Magnet(np.array([1.5,1,-1]), np.array([1,0,0])))
+    sim.add_magnet(Magnet(np.array([1.5,-1,-1]), np.array([1,0,0])))
+ 
+    sim.simulate((0,10), (-0.98,0,2.28,0))
+
+if __name__ == "__main__":
     # Sim 1: Pendulum should end in the left hand side of the plot
-    sim = Pendulum(M_p=0.1,m_p=1,l=1,mu_0=1,g=50,alpha=0.2)
+    sim = Pendulum(M_p=0.1,m_p=1,l=1,mu_0=1,g=40,alpha=0.2)
     sim.add_magnet(Magnet(np.array([1.5,1,1]), np.array([1,0,0])))
     sim.add_magnet(Magnet(np.array([1.5,-1,1]), np.array([1,0,0])))
     sim.add_magnet(Magnet(np.array([1.5,1,-1]), np.array([1,0,0])))
     sim.add_magnet(Magnet(np.array([1.5,-1,-1]), np.array([1,0,0])))
 
-    n = 100
-    phis = np.linspace(-1.9,1.9,n)
+    n = 40
+    phis = np.linspace(-1.7,1.7,n)
     d_phis = [0]
-    thetas = np.pi/2  + np.linspace(-1.5,1.5,n)
+    thetas = np.pi/2 + np.linspace(-1.5,1.5,n)
     d_thetas = [0]
 
     initial_conditions = np.array(list(product(phis, d_phis, thetas, d_thetas)))
@@ -171,26 +184,63 @@ if __name__ == "__main__0":
     closest_roots = np.zeros(len(initial_conditions))
     for i, initial_condition in enumerate(initial_conditions):
         print(i,initial_condition)
-        ts, ys = sim.simulate((0,3), initial_condition, show_plots=False)
+        ts, ys = sim.simulate((0,10), initial_condition, show_plots=False)
 
         first = ys[:,0]
         last = ys[:,-1]
 
-        distances = np.linalg.norm(roots - last, axis=1)
-        closest_roots[i] = np.argmin(distances)
-
+        v = np.sqrt(last[1]**2 + last[3]**2)
+        if v > 0.05:
+            print(i, "Did not converge")
+            closest_roots[i] = np.nan
+        else:
+            distances = np.linalg.norm(roots - last, axis=1)
+            closest_roots[i] = np.argmin(distances)
+    #%%
     phis_plot = initial_conditions[:,0]
     thetas_plot = initial_conditions[:,2]
 
-    # plt.scatter(phis_plot, thetas_plot, c=closest_roots)
-    # plt.show()
+    x_plot = sim.l * np.sin(thetas_plot) * np.cos(phis_plot)
+    y_plot = sim.l * np.sin(thetas_plot) * np.sin(phis_plot)
+    z_plot = sim.l * np.cos(thetas_plot)
 
-    plt.matshow(closest_roots.reshape((n,n)).T)
+    unique_values = np.unique(closest_roots)
+    colors = plt.cm.tab10(np.linspace(0, 1, len(unique_values)))
+    colormap = ListedColormap(colors)
+    color_map = {num: idx for idx, num in enumerate(unique_values)}
+    closest_roots_mapped = np.vectorize(color_map.get)(closest_roots)
+
+    plt.scatter(y_plot, z_plot, c=closest_roots, cmap=colormap)
+    plt.xlabel("y")
+    plt.ylabel("z")
+    legend_elements = [
+        Patch(facecolor=colors[i], edgecolor='black', label=f'[{roots[val][0]:.4}, {roots[val][2]:.4}]')
+        for i, val in enumerate(unique_values[~np.isnan(unique_values)].astype(int))
+    ]
+    plt.legend(
+        handles=legend_elements,
+        loc='upper right',
+        bbox_to_anchor=(1.4, 1.0)
+    )
+    plt.savefig("./chaos_plot_y_z.pdf", bbox_inches='tight')
+
+    fig, ax = plt.subplots()
+
+    ax.matshow(closest_roots_mapped.reshape((n,n)).T, cmap=colormap)
     plt.gca().invert_yaxis()
+    plt.gca().xaxis.set_ticks_position('bottom')
     plt.xlabel("Phi")
     plt.ylabel("Theta")
     plt.xticks(ticks=np.arange(0, n, n//10), labels=np.round(phis[::n//10], 2))
     plt.yticks(ticks=np.arange(0, n, n//10), labels=np.round(thetas[::n//10], 2))
-    plt.gca().xaxis.set_ticks_position('bottom')
-    plt.tight_layout()
-    plt.savefig("./figures/chaos_plot.pdf")
+    
+    legend_elements = [
+        Patch(facecolor=colors[i], edgecolor='black', label=f'[{roots[val][0]:.4}, {roots[val][2]:.4}]')
+        for i, val in enumerate(unique_values[~np.isnan(unique_values)].astype(int))
+    ]
+    plt.legend(
+        handles=legend_elements,
+        loc='upper right',
+        bbox_to_anchor=(1.6, 1.0)
+    )
+    plt.savefig("./chaos_plot_phi_theta.pdf", bbox_inches='tight')

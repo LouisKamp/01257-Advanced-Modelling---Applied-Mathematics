@@ -29,7 +29,7 @@ r_norm = sqrt(r[0]**2 + r[1]**2 + r[2]**2)
 r_hat = r / r_norm
 
 m_1 = Matrix([m_1_x, m_1_y, m_1_z])
-m_p = m_p_abs*Matrix([cos(phi), sin(phi), cos(theta)])
+m_p = m_p_abs*l*Matrix([sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta)])
 
 B_1 = (mu_0 / 4*pi)*( 3*r_hat * r_hat.dot(m_1) - m_1 ) / (r_norm**3)
 U_1 = simplify(-m_p.dot(B_1))
