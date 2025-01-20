@@ -125,27 +125,37 @@ class Pendulum():
         return np.linalg.eigvals([[0, 1], [lin_Ug - lin_Um/(self.M_p * self.l**2), (-self.alpha)/(self.M_p * self.l**2)]])
 
 if __name__ == "__main__":
+    sim = Pendulum(M_p=1,m_p=0.1,l=1,mu_0=1,g=1,alpha=0.1)
+    sim.add_magnet(Magnet(np.array([1.5,1]), np.array([-2,0])))
+    steady_state = sim.roots()
+    for i in range(len(steady_state)):
+        if steady_state[i][0] < np.pi/2 and steady_state[i][0] > -np.pi/2:
+            print(f'Root {i}: {np.round(steady_state[i][0], 3)}')
+            print(f"Eigenvalues:")
+            print(np.round(sim.eigenvalues(steady_state[i]), 3))
+
+
     # Sim 1: Pendulum should end in the left hand side of the plot
-    sim = Pendulum(M_p=1,m_p=1,l=1,mu_0=1,g=1,alpha=0.1)
-    sim.add_magnet(Magnet(np.array([1.5,1]), np.array([0.5,0])))
-    sim.add_magnet(Magnet(np.array([1.5,-1]), np.array([0.5,0])))
+    # sim = Pendulum(M_p=1,m_p=1,l=1,mu_0=1,g=1,alpha=0.1)
+    # sim.add_magnet(Magnet(np.array([1.5,1]), np.array([0.5,0])))
+    # sim.add_magnet(Magnet(np.array([1.5,-1]), np.array([0.5,0])))
 
     # sim.simulate((0,50), (-0.1,0))
     # Sim 2: Pendulum should end in the right hand side of the plot
-    sim = Pendulum(M_p=1,m_p=1,l=1,mu_0=1,g=1,alpha=0.1)
-    sim.add_magnet(Magnet(np.array([1.5,1]), np.array([0.5,0])))
-    sim.add_magnet(Magnet(np.array([1.5,-1]), np.array([0.5,0])))
+    # sim = Pendulum(M_p=1,m_p=1,l=1,mu_0=1,g=1,alpha=0.1)
+    # sim.add_magnet(Magnet(np.array([1.5,1]), np.array([0.5,0])))
+    # sim.add_magnet(Magnet(np.array([1.5,-1]), np.array([0.5,0])))
 
-    sim.simulate((0,50), (0.1,0))
+    # sim.simulate((0,50), (0.1,0))
 
     # Sim 3: Pendulum should be pushed a little to the left
-    sim = Pendulum(M_p=1,m_p=0.1,l=1,mu_0=1,g=1,alpha=1)
-    sim.add_magnet(Magnet(np.array([1,1]), np.array([1,1])))
+    # sim = Pendulum(M_p=1,m_p=0.1,l=1,mu_0=1,g=1,alpha=1)
+    # sim.add_magnet(Magnet(np.array([1,1]), np.array([1,1])))
 
-    sim.simulate((0,100), (-np.pi, -1))
+    # sim.simulate((0,100), (-np.pi, -1))
 
     # Sim 4: Pendulum starts upside down with a magnet below
-    sim = Pendulum(M_p=1, m_p=1, l=1, mu_0=1, g=1, alpha=0.1)
+    # sim = Pendulum(M_p=1, m_p=1, l=1, mu_0=1, g=1, alpha=0.1)
 
     # Constants
     M_p = 1.0
@@ -161,3 +171,4 @@ if __name__ == "__main__":
     alpha = 0.1
 
     sim = Pendulum(M_p=M_p,m_p=m_p,l=l,mu_0=mu_0,g=g,alpha=alpha)
+

@@ -16,9 +16,9 @@ def plot_phase_portrait(magnet_position=[], plot_title="phase_portrait"):
         plt.scatter(phi_res[-1], dphi_res[-1], color='blue', s=10)
         plt.plot(phi_res, dphi_res, linewidth=0.5)
 
-    plt.xlabel("Phi")
-    plt.ylabel("d_Phi")
-    plt.savefig(f"{plot_title}.pdf", format="pdf")
+    plt.xlabel(r"$\phi$")
+    plt.ylabel(r"$\phi '$")
+    plt.savefig("plotsbifurcation/phase_portrait.png")
     plt.show()
 
 # %%

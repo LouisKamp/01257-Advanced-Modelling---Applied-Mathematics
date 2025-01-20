@@ -19,8 +19,10 @@ def plot_vector_field(magnet_position=[], plot_title="phase_portrait"):
     plt.quiver(Phis, dPhis, y1, y2)
     plt.xlabel('Phi')
     plt.ylabel('dPhi')
-    # plt.title('Vector Field')
-    plt.savefig(f"{plot_title}.pdf", format="pdf")
+    plt.xlabel(r"$\phi$")
+    plt.ylabel(r"$\phi '$")
+    plt.title('Vector Field')
+    plt.savefig("plotsbifurcation/vector_field_to_side.pdf")
     plt.show()
     # %%
     sim.f(0, np.array([-0.091, 0]))
