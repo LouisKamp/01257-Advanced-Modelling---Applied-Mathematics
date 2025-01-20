@@ -136,6 +136,17 @@ class Pendulum():
 
         return np.array([y[1], sol_g_phi + sol_m_phi + sol_alpha_phi, y[3], sol_g_theta + sol_m_theta + sol_alpha_theta])
     
+    def potential(self, Phis, Thetas):
+
+        U_g = -self.M_p*self.g*self.l*np.sin(Thetas)*np.cos(Phis)
+
+        U_m = np.sum(np.array([
+            (1/4)*np.pi*self.l*self.m_p*self.mu_0*((magnet.moment[0]*((self.l*np.cos(Thetas) - magnet.position[2])**2 + (self.l*np.sin(Phis)*np.sin(Thetas) - magnet.position[1])**2 + (self.l*np.sin(Thetas)*np.cos(Phis) - magnet.position[0])**2) - 3*(self.l*np.sin(Thetas)*np.cos(Phis) - magnet.position[0])*(magnet.moment[0]*(self.l*np.sin(Thetas)*np.cos(Phis) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(Phis)*np.sin(Thetas) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(Thetas) - magnet.position[2])))*np.sin(Thetas)*np.cos(Phis) + (magnet.moment[1]*((self.l*np.cos(Thetas) - magnet.position[2])**2 + (self.l*np.sin(Phis)*np.sin(Thetas) - magnet.position[1])**2 + (self.l*np.sin(Thetas)*np.cos(Phis) - magnet.position[0])**2) - 3*(self.l*np.sin(Phis)*np.sin(Thetas) - magnet.position[1])*(magnet.moment[0]*(self.l*np.sin(Thetas)*np.cos(Phis) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(Phis)*np.sin(Thetas) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(Thetas) - magnet.position[2])))*np.sin(Phis)*np.sin(Thetas) + (magnet.moment[2]*((self.l*np.cos(Thetas) - magnet.position[2])**2 + (self.l*np.sin(Phis)*np.sin(Thetas) - magnet.position[1])**2 + (self.l*np.sin(Thetas)*np.cos(Phis) - magnet.position[0])**2) - 3*(self.l*np.cos(Thetas) - magnet.position[2])*(magnet.moment[0]*(self.l*np.sin(Thetas)*np.cos(Phis) - magnet.position[0]) + magnet.moment[1]*(self.l*np.sin(Phis)*np.sin(Thetas) - magnet.position[1]) + magnet.moment[2]*(self.l*np.cos(Thetas) - magnet.position[2])))*np.cos(Thetas))/((self.l*np.cos(Thetas) - magnet.position[2])**2 + (self.l*np.sin(Phis)*np.sin(Thetas) - magnet.position[1])**2 + (self.l*np.sin(Thetas)*np.cos(Phis) - magnet.position[0])**2)**(5/2)
+            for magnet in self.magnets
+        ]), axis=0)
+
+        return U_g + U_m
+
     def roots(self):
         phis = np.linspace(-2*np.pi, 2*np.pi, 20)
         d_phis = [0]
@@ -153,17 +164,41 @@ class Pendulum():
                 if not any(np.allclose(sol.x, r) for r in roots):
                     roots.append(sol.x)
         return np.array(roots)
-
+#%%
 if __name__ == "__main__":
-    sim = Pendulum(M_p=0.1,m_p=1,l=1,mu_0=1,g=1,alpha=0.2)
+    n = 100
+    phis = np.linspace(-0.2, 0.2, n)
+    thetas = np.pi/2 + np.linspace(-0.2, 0.2, n)
+
+    phis_grid, thetas_grid = np.meshgrid(phis, thetas)
+
+    sim = Pendulum(M_p=0.1,m_p=1,l=1,mu_0=1,g=40,alpha=0.2)
+    sim.add_magnet(Magnet(np.array([1.5,1,1]), np.array([1,0,0])))
+    sim.add_magnet(Magnet(np.array([1.5,-1,1]), np.array([1,0,0])))
+    sim.add_magnet(Magnet(np.array([1.5,1,-1]), np.array([1,0,0])))
+    sim.add_magnet(Magnet(np.array([1.5,-1,-1]), np.array([1,0,0])))
+
+    P = sim.potential(phis_grid, thetas_grid)
+    
+    plt.contourf(phis_grid, thetas_grid, P, levels=10)
+    plt.axis('equal')
+    plt.xlabel(r"$\phi$")
+    plt.ylabel(r"$\theta$")
+    plt.colorbar(label='Potential Energy [J]')
+    plt.savefig("potential_four_magnets.pdf")
+    plt.show()
+
+#%%
+if __name__ == "__main__":
+    sim = Pendulum(M_p=0.1,m_p=1,l=1,mu_0=1,g=40,alpha=0)
     sim.add_magnet(Magnet(np.array([1.5,1,1]), np.array([1,0,0])))
     sim.add_magnet(Magnet(np.array([1.5,-1,1]), np.array([1,0,0])))
     sim.add_magnet(Magnet(np.array([1.5,1,-1]), np.array([1,0,0])))
     sim.add_magnet(Magnet(np.array([1.5,-1,-1]), np.array([1,0,0])))
  
-    sim.simulate((0,10), (-0.98,0,2.28,0))
-
-if __name__ == "__main__":
+    sim.simulate((0,10), (0 + 0.1,0,np.pi/2,0))
+#%%
+if __name__ == "__main__0":
     # Sim 1: Pendulum should end in the left hand side of the plot
     sim = Pendulum(M_p=0.1,m_p=1,l=1,mu_0=1,g=40,alpha=0.2)
     sim.add_magnet(Magnet(np.array([1.5,1,1]), np.array([1,0,0])))
@@ -196,7 +231,7 @@ if __name__ == "__main__":
         else:
             distances = np.linalg.norm(roots - last, axis=1)
             closest_roots[i] = np.argmin(distances)
-    #%%
+
     phis_plot = initial_conditions[:,0]
     thetas_plot = initial_conditions[:,2]
 
@@ -229,8 +264,8 @@ if __name__ == "__main__":
     ax.matshow(closest_roots_mapped.reshape((n,n)).T, cmap=colormap)
     plt.gca().invert_yaxis()
     plt.gca().xaxis.set_ticks_position('bottom')
-    plt.xlabel("Phi")
-    plt.ylabel("Theta")
+    plt.xlabel(r"$\phi$")
+    plt.ylabel(r"$\theta$")
     plt.xticks(ticks=np.arange(0, n, n//10), labels=np.round(phis[::n//10], 2))
     plt.yticks(ticks=np.arange(0, n, n//10), labels=np.round(thetas[::n//10], 2))
     

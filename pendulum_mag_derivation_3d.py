@@ -63,3 +63,5 @@ pycode(phi_t_t.subs({phi: phi_1, phi_dot: d_phi, theta: theta_1, theta_dot: d_th
 # %%
 pycode(theta_t_t.subs({phi: phi_1, phi_dot: d_phi, theta: theta_1, theta_dot: d_theta}))
 # %%
+pycode(V.subs({phi: phi_1, phi_dot: d_phi, theta: theta_1, theta_dot: d_theta}))
+# %%
